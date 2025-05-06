@@ -5,25 +5,36 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.7.2
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
+
+  # Lógica del proyecto
+  http: ^1.3.0
+  fl_chart: ^0.70.2
+
+  # Base de datos local
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   path_provider: ^2.0.14
-  firebase_core: ^3.13.0       
-  firebase_auth: ^5.5.2        
-  cloud_firestore: ^5.6.6      
-  fl_chart: ^0.70.2            
-  http: ^1.3.0                 
+
+  # Firebase (opcional por ahora)
+  firebase_core: ^3.13.0
+  firebase_auth: ^5.5.2
+  cloud_firestore: ^5.6.6
+
+  # Estilo
   cupertino_icons: ^1.0.8
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^3.0.0
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/DefaultBall.png
