@@ -4,7 +4,8 @@ import '../services/pokemon_service.dart';
 import 'compare_screen.dart';
 
 class SelectPokemonScreen extends StatefulWidget {
-  const SelectPokemonScreen({super.key});
+  final bool clearOnLoad;
+  const SelectPokemonScreen({super.key, this.clearOnLoad = false});
 
   @override
   State<SelectPokemonScreen> createState() => _SelectPokemonScreenState();
@@ -17,7 +18,23 @@ class _SelectPokemonScreenState extends State<SelectPokemonScreen> {
   Pokemon? pokemon1;
   Pokemon? pokemon2;
 
+  @override
+  void initState() {
+    super.initState();
+    if (widget.clearOnLoad) {
+      pokemon1 = null;
+      pokemon2 = null;
+      _controller1.clear();
+      _controller2.clear();
+    }
+  }
+
   Future<void> _searchPokemon(String name, int slot) async {
+    if (name.trim().isEmpty) {
+      _showError('Por favor ingresa un nombre válido');
+      return;
+    }
+
     try {
       final poke = await PokemonService.fetchPokemonByName(name);
       if (poke != null) {
@@ -74,6 +91,7 @@ class _SelectPokemonScreenState extends State<SelectPokemonScreen> {
               Text('SP.ATK: ${pokemon.specialAttack}'),
               Text('SP.DEF: ${pokemon.specialDefense}'),
               Text('SPD: ${pokemon.speed}'),
+              Text('Tipo: ${pokemon.types.join(', ')}'),
             ],
           )
         else
@@ -88,67 +106,70 @@ class _SelectPokemonScreenState extends State<SelectPokemonScreen> {
       appBar: AppBar(
         title: const Text('PokéComparer & Trivia'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Column(
-                  children: [
-                    _buildPokemonCard(pokemon1, 'POKÉMON 1'),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      width: 130,
-                      child: TextField(
-                        controller: _controller1,
-                        decoration: const InputDecoration(labelText: 'Buscar Pokémon 1'),
-                      ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => _searchPokemon(_controller1.text, 1),
-                      child: const Text('Buscar'),
-                    ),
-                  ],
-                ),
-                Column(
-                  children: [
-                    _buildPokemonCard(pokemon2, 'POKÉMON 2'),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      width: 130,
-                      child: TextField(
-                        controller: _controller2,
-                        decoration: const InputDecoration(labelText: 'Buscar Pokémon 2'),
-                      ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => _searchPokemon(_controller2.text, 2),
-                      child: const Text('Buscar'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: (pokemon1 != null && pokemon2 != null)
-                  ? () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CompareScreen(
-                            pokemon1: pokemon1!,
-                            pokemon2: pokemon2!,
-                          ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Column(
+                    children: [
+                      _buildPokemonCard(pokemon1, 'POKÉMON 1'),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: 130,
+                        child: TextField(
+                          controller: _controller1,
+                          decoration: const InputDecoration(labelText: 'Buscar Pokémon 1'),
                         ),
-                      );
-                    }
-                  : null,
-              child: const Text('Ver gráfica de comparación'),
-            ),
-          ],
+                      ),
+                      ElevatedButton(
+                        onPressed: () => _searchPokemon(_controller1.text, 1),
+                        child: const Text('Buscar'),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    children: [
+                      _buildPokemonCard(pokemon2, 'POKÉMON 2'),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: 130,
+                        child: TextField(
+                          controller: _controller2,
+                          decoration: const InputDecoration(labelText: 'Buscar Pokémon 2'),
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => _searchPokemon(_controller2.text, 2),
+                        child: const Text('Buscar'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: (pokemon1 != null && pokemon2 != null)
+                    ? () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CompareScreen(
+                              pokemon1: pokemon1!,
+                              pokemon2: pokemon2!,
+                            ),
+                          ),
+                        );
+                      }
+                    : null,
+                child: const Text('Ver gráfica de comparación'),
+              ),
+            ],
+          ),
         ),
       ),
     );

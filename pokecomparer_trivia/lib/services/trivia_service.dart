@@ -1,4 +1,40 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/trivia_question.dart';
+
+class TriviaService {
+  static Future<List<TriviaQuestion>> fetchFromFirestore() async {
+    final snapshot = await FirebaseFirestore.instance.collection('questions').get();
+
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      return TriviaQuestion(
+        question: data['question'] ?? '',
+        options: List<String>.from(data['options'] ?? []),
+        correctIndex: data['correctIndex'] ?? 0,
+      );
+    }).toList();
+  }
+
+  static Future<void> saveScore({required int score, required int total}) async{
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    await FirebaseFirestore.instance
+      .collection('users')
+      .doc(uid)
+      .collection('scores')
+      .add({
+        'score': score,
+        'total': total,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+  }
+}
+
+
+/*import '../models/trivia_question.dart';
 
 class TriviaService {
   static Future<List<TriviaQuestion>> fetchSampleQuestions() async {
@@ -62,3 +98,4 @@ class TriviaService {
     ];
   }
 }
+*/

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "806049097468",
+    "project_id": "pokecomparertrivia",
+    "storage_bucket": "pokecomparertrivia.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:806049097468:android:72a34f1c1991a3a3ecd979",
+        "android_client_info": {
+          "package_name": "com.example.pokecomparer_trivia"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAkIr-9bzTMRGi1Mw5ix7sPTXkVXf6KGYo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

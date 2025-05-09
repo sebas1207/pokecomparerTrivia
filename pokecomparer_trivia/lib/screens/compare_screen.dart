@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/pokemon.dart';
 import '../controllers/pokemon_controller.dart';
+import '../services/favorites_service.dart';
+import 'home_screen.dart';
 import 'package:fl_chart/fl_chart.dart';
 
 class CompareScreen extends StatelessWidget {
@@ -17,6 +19,19 @@ class CompareScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Comparación de Pokémon'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home),
+            tooltip: 'Ir al inicio',
+            onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const HomeScreen(resetSelection: true)),
+                (route) => false,
+              );
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -38,6 +53,7 @@ class CompareScreen extends StatelessWidget {
                       pokemon1.name.toUpperCase(),
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
+                    Text(pokemon1.types.join(', '), style: const TextStyle(fontSize: 12)),
                   ],
                 ),
                 const Text('VS', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -54,6 +70,7 @@ class CompareScreen extends StatelessWidget {
                       pokemon2.name.toUpperCase(),
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
+                    Text(pokemon2.types.join(', '), style: const TextStyle(fontSize: 12)),
                   ],
                 ),
               ],
@@ -90,7 +107,7 @@ class CompareScreen extends StatelessWidget {
                   ),
                   titlesData: FlTitlesData(
                     leftTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false), // Oculta los valores del eje Y
+                      sideTitles: SideTitles(showTitles: false),
                     ),
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
@@ -123,6 +140,17 @@ class CompareScreen extends StatelessWidget {
                   }).toList(),
                 ),
               ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () async {
+                await FavoritesService.saveFavoriteComparison(pokemon1, pokemon2);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('¡Guardado en favoritos!')),
+                );
+              },
+              icon: const Icon(Icons.favorite_border),
+              label: const Text('Guardar como favorito'),
             ),
           ],
         ),

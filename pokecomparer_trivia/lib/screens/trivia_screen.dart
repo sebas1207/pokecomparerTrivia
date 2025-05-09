@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../controllers/trivia_controller.dart';
+
 import '../services/trivia_service.dart';
 import 'trivia_result_screen.dart';
 
@@ -21,8 +22,8 @@ class _TriviaScreenState extends State<TriviaScreen> {
   }
 
   Future<void> _loadQuestions() async {
-    final questions = await TriviaService.fetchSampleQuestions();
-    questions.shuffle(); // 👈 Mezclar preguntas al iniciar
+    final questions = await TriviaService.fetchFromFirestore();
+    questions.shuffle(); // Mezcla preguntas
     setState(() {
       controller = TriviaController(questions);
       isLoading = false;
@@ -34,22 +35,37 @@ class _TriviaScreenState extends State<TriviaScreen> {
       controller.answer(selectedIndex);
     });
 
-    if (controller.isFinished) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => TriviaResultScreen(
-            score: controller.score,
-            total: controller.questions.length,
+    // Espera un microsegundo antes de redirigir (para evitar errores de render)
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (controller.isFinished) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TriviaResultScreen(
+              score: controller.score,
+              total: controller.questions.length,
+            ),
           ),
-        ),
-      );
-    }
+        );
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     if (isLoading) return const Center(child: CircularProgressIndicator());
+
+    if (controller.questions.isEmpty) {
+      return const Scaffold(
+        body: Center(child: Text('No se encontraron preguntas en Firestore')),
+      );
+    }
+
+    if (controller.isFinished) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
 
     final q = controller.currentQuestion;
 
@@ -66,7 +82,7 @@ class _TriviaScreenState extends State<TriviaScreen> {
             const SizedBox(height: 24),
             ...List.generate(q.options.length, (index) {
               return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6), // 👈 Espacio entre botones
+                padding: const EdgeInsets.symmetric(vertical: 6),
                 child: ElevatedButton(
                   onPressed: () => _handleAnswer(index),
                   child: Text(q.options[index]),
