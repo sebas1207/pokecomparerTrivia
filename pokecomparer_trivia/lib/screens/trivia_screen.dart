@@ -22,8 +22,8 @@ class _TriviaScreenState extends State<TriviaScreen> {
   }
 
   Future<void> _loadQuestions() async {
-    final questions = await TriviaService.fetchFromFirestore();
-    questions.shuffle(); // Mezcla preguntas
+    final questions = await TriviaService.loadQuestionsSmart();
+    questions.shuffle(); 
     setState(() {
       controller = TriviaController(questions);
       isLoading = false;

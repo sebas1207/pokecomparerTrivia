@@ -1,12 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:hive/hive.dart';
 import '../models/trivia_question.dart';
+import '../models/trivia_score.dart';
 
 class TriviaService {
+  static const String _boxName = 'trivia_questions';
+  static const String _localScoresBox = 'local_scores';
   static Future<List<TriviaQuestion>> fetchFromFirestore() async {
     final snapshot = await FirebaseFirestore.instance.collection('questions').get();
 
-    return snapshot.docs.map((doc) {
+    final questions = snapshot.docs.map((doc) {
       final data = doc.data();
       return TriviaQuestion(
         question: data['question'] ?? '',
@@ -14,23 +18,84 @@ class TriviaService {
         correctIndex: data['correctIndex'] ?? 0,
       );
     }).toList();
+
+    await saveQuestionsLocally(questions);
+    return questions;
   }
 
-  static Future<void> saveScore({required int score, required int total}) async{
+  static Future<void> saveQuestionsLocally(List<TriviaQuestion> questions) async {
+    final box = await Hive.openBox<TriviaQuestion>(_boxName);
+    await box.clear();
+    await box.addAll(questions);
+  }
+
+  static Future<List<TriviaQuestion>> loadQuestionsLocally() async {
+    final box = await Hive.openBox<TriviaQuestion>(_boxName);
+    return box.values.toList();
+  }
+
+
+  static Future<List<TriviaQuestion>> loadQuestionsSmart() async {
+    try {
+      return await fetchFromFirestore();
+    } catch (_) {
+      return await loadQuestionsLocally();
+    }
+  }
+
+
+  static Future<void> saveScore({required int score, required int total}) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
 
     await FirebaseFirestore.instance
-      .collection('users')
-      .doc(uid)
-      .collection('scores')
-      .add({
-        'score': score,
-        'total': total,
-        'timestamp': FieldValue.serverTimestamp(),
+        .collection('users')
+        .doc(uid)
+        .collection('scores')
+        .add({
+      'score': score,
+      'total': total,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+    await saveScoreLocally(score: score, total: total);
+  }
+
+  static Future<void> saveScoreLocally({required int score, required int total}) async {
+    final box = await Hive.openBox<TriviaScore>(_localScoresBox);
+    await box.add(TriviaScore(
+      score: score, 
+      total: total, 
+      timestamp: DateTime.now()
+    ));
+  }
+  static Future<void> syncLocalScoresToFirestore() async {
+  final uid = FirebaseAuth.instance.currentUser?.uid;
+  if (uid == null) return;
+
+  final box = await Hive.openBox<TriviaScore>('local_scores');
+  final unsynced = box.values.where((s) => !s.synced).toList();
+
+  for (var score in unsynced) {
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('scores')
+          .add({
+        'score': score.score,
+        'total': score.total,
+        'timestamp': score.timestamp,
       });
 
+
+      score.synced = true;
+      await score.save();
+    } catch (_) {
+
+    }
   }
+}
+
 }
 
 
